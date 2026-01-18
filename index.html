@@ -31,10 +31,6 @@ header {
 }
 
 /* الصورة الرئيسية */
-.main-photo {
-  flex: 2;
-}
-
 .main-photo img {
   width: 100%;
   height: 420px;
@@ -45,7 +41,6 @@ header {
 
 /* الصور المصغّرة */
 .thumbnails {
-  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
@@ -57,13 +52,6 @@ header {
   object-fit: cover;
   border-radius: 8px;
   cursor: pointer;
-  opacity: 0.8;
-  transition: 0.3s;
-}
-
-.thumbnails img:hover {
-  opacity: 1;
-  transform: scale(1.03);
 }
 
 /* الهاتف */
@@ -79,40 +67,35 @@ header {
   .thumbnails {
     grid-template-columns: repeat(3, 1fr);
   }
-
-  .thumbnails img {
-    height: 100px;
-  }
 }
 
-/* ====== وضع ملء الشاشة الحقيقي ====== */
-body.no-scroll {
-  overflow: hidden;
-}
-
-.fullscreen-image {
+/* ====== الفورم (Overlay) ====== */
+.viewer {
   position: fixed;
   inset: 0;
-  background: black;
+  background: rgba(0,0,0,0.9);
+  display: none;
   z-index: 9999;
+  overflow: auto;              /* يسمح بالسحب */
+  touch-action: pan-x pan-y;   /* يسمح باللمس */
 }
 
-.fullscreen-image img {
-  width: 100vw;
-  height: 100vh;
-  object-fit: contain;
-  border-radius: 0;
+.viewer img {
+  display: block;
+  margin: auto;
+  max-width: none;   /* مهم: الحجم الحقيقي */
+  max-height: none;
 }
 </style>
 </head>
 
 <body>
 
-<header id="pageHeader">Mobilize EZ1</header>
+<header>Mobilize EZ1</header>
 
-<div class="album" id="album">
+<div class="album">
 
-  <div class="main-photo" id="mainPhoto">
+  <div class="main-photo">
     <img id="mainImage" src="img1.jpg" alt="">
   </div>
 
@@ -122,44 +105,35 @@ body.no-scroll {
     <img src="img3.jpg" onclick="changeImage(this)">
     <img src="img4.jpg" onclick="changeImage(this)">
     <img src="img5.jpg" onclick="changeImage(this)">
-    <img src="img6.jpg" onclick="changeImage(this)">
-    <img src="img7.jpg" onclick="changeImage(this)">
-    <img src="img8.jpg" onclick="changeImage(this)">
-    <img src="img9.jpg" onclick="changeImage(this)">
-    <img src="img10.jpg" onclick="changeImage(this)">
   </div>
 
 </div>
 
+<!-- الفورم -->
+<div class="viewer" id="viewer">
+  <img id="viewerImg">
+</div>
+
 <script>
 const mainImage = document.getElementById('mainImage');
-const mainPhoto = document.getElementById('mainPhoto');
-const album = document.getElementById('album');
-const header = document.getElementById('pageHeader');
+const viewer = document.getElementById('viewer');
+const viewerImg = document.getElementById('viewerImg');
 
 function changeImage(img) {
   mainImage.src = img.src;
 }
 
-/* ضغط = ملء الشاشة / رجوع */
+/* فتح الفورم عند الضغط (الهاتف فقط) */
 mainImage.addEventListener('click', () => {
   if (window.innerWidth <= 768) {
-
-    const isFull = mainPhoto.classList.contains('fullscreen-image');
-
-    if (!isFull) {
-      mainPhoto.classList.add('fullscreen-image');
-      album.style.display = 'none';
-      header.style.display = 'none';
-      document.body.classList.add('no-scroll');
-    } else {
-      mainPhoto.classList.remove('fullscreen-image');
-      album.style.display = 'flex';
-      header.style.display = 'block';
-      document.body.classList.remove('no-scroll');
-    }
-
+    viewerImg.src = mainImage.src;
+    viewer.style.display = 'block';
   }
+});
+
+/* إغلاق الفورم عند الضغط خارج الصورة */
+viewer.addEventListener('click', () => {
+  viewer.style.display = 'none';
 });
 </script>
 
