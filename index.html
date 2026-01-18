@@ -66,7 +66,7 @@ header {
   transform: scale(1.03);
 }
 
-/* 📱 الهاتف */
+/* الهاتف */
 @media (max-width: 768px) {
   .album {
     flex-direction: column;
@@ -85,20 +85,21 @@ header {
   }
 }
 
-/* وضع ملء الشاشة */
-.fullscreen {
+/* ====== وضع ملء الشاشة الحقيقي ====== */
+body.no-scroll {
+  overflow: hidden;
+}
+
+.fullscreen-image {
   position: fixed;
   inset: 0;
   background: black;
   z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.fullscreen img {
-  width: 100%;
-  height: 100%;
+.fullscreen-image img {
+  width: 100vw;
+  height: 100vh;
   object-fit: contain;
   border-radius: 0;
 }
@@ -107,16 +108,14 @@ header {
 
 <body>
 
-<header>Mobilize EZ1</header>
+<header id="pageHeader">Mobilize EZ1</header>
 
-<div class="album">
+<div class="album" id="album">
 
-  <!-- الصورة الرئيسية -->
   <div class="main-photo" id="mainPhoto">
     <img id="mainImage" src="img1.jpg" alt="">
   </div>
 
-  <!-- الصور المصغّرة -->
   <div class="thumbnails">
     <img src="img1.jpg" onclick="changeImage(this)">
     <img src="img2.jpg" onclick="changeImage(this)">
@@ -135,19 +134,34 @@ header {
 <script>
 const mainImage = document.getElementById('mainImage');
 const mainPhoto = document.getElementById('mainPhoto');
+const album = document.getElementById('album');
+const header = document.getElementById('pageHeader');
 
 function changeImage(img) {
   mainImage.src = img.src;
 }
 
-/* ملء الشاشة في الهاتف */
+/* ضغط = ملء الشاشة / رجوع */
 mainImage.addEventListener('click', () => {
   if (window.innerWidth <= 768) {
-    mainPhoto.classList.toggle('fullscreen');
+
+    const isFull = mainPhoto.classList.contains('fullscreen-image');
+
+    if (!isFull) {
+      mainPhoto.classList.add('fullscreen-image');
+      album.style.display = 'none';
+      header.style.display = 'none';
+      document.body.classList.add('no-scroll');
+    } else {
+      mainPhoto.classList.remove('fullscreen-image');
+      album.style.display = 'flex';
+      header.style.display = 'block';
+      document.body.classList.remove('no-scroll');
+    }
+
   }
 });
 </script>
 
 </body>
 </html>
-
