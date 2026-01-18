@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>كانوا هنا</title>
 
 <style>
@@ -9,16 +10,17 @@ body {
   margin: 0;
   font-family: Tahoma, Arial, sans-serif;
   background: #f2f2f2;
+  overflow-x: hidden;
 }
 
-/* العنوان */
 header {
   background: orange;
   color: black;
   padding: 15px;
   text-align: center;
   font-size: 26px;
-  font-weight: bold;
+  position: relative;
+  z-index: 10;
 }
 
 /* الحاوية */
@@ -28,19 +30,78 @@ header {
   padding: 15px;
   max-width: 1100px;
   margin: auto;
+  transition: opacity 0.3s;
 }
 
 /* الصورة الرئيسية */
+.main-photo {
+  flex: 2;
+  cursor: pointer;
+}
+
 .main-photo img {
   width: 100%;
   height: 420px;
   object-fit: cover;
   border-radius: 10px;
-  cursor: pointer;
+  transition: transform 0.3s;
 }
 
-/* الصور المصغّرة */
+/* تكبير الصورة على الشاشة */
+.fullscreen-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.fullscreen-mode.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.fullscreen-img {
+  max-width: 95%;
+  max-height: 85%;
+  object-fit: contain;
+  border-radius: 5px;
+  transform: scale(0.95);
+  transition: transform 0.3s;
+}
+
+.fullscreen-mode.active .fullscreen-img {
+  transform: scale(1);
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* الصور الجانبية */
 .thumbnails {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
@@ -52,9 +113,16 @@ header {
   object-fit: cover;
   border-radius: 8px;
   cursor: pointer;
+  opacity: 0.8;
+  transition: 0.3s;
 }
 
-/* الهاتف */
+.thumbnails img:hover {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+/* 📱 الهاتف */
 @media (max-width: 768px) {
   .album {
     flex-direction: column;
@@ -67,24 +135,26 @@ header {
   .thumbnails {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  .thumbnails img {
+    height: 100px;
+  }
+  
+  /* إظهار زر الإغلاق فقط على الهاتف */
+  .close-btn {
+    display: flex;
+  }
+  
+  /* التكبير على الهاتف فقط */
+  .main-photo {
+    cursor: zoom-in;
+  }
 }
 
-/* ====== الفورم (Overlay) ====== */
-.viewer {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.9);
-  display: none;
-  z-index: 9999;
-  overflow: auto;              /* يسمح بالسحب */
-  touch-action: pan-x pan-y;   /* يسمح باللمس */
-}
-
-.viewer img {
-  display: block;
-  margin: auto;
-  max-width: none;   /* مهم: الحجم الحقيقي */
-  max-height: none;
+@media (min-width: 769px) {
+  .close-btn {
+    display: none;
+  }
 }
 </style>
 </head>
@@ -94,47 +164,83 @@ header {
 <header>Mobilize EZ1</header>
 
 <div class="album">
-
+  <!-- الصورة الرئيسية -->
   <div class="main-photo">
-    <img id="mainImage" src="img1.jpg" alt="">
+    <img id="mainImage" src="img1.jpg" alt="الصورة الرئيسية" onclick="toggleFullscreen()">
   </div>
 
+  <!-- الصور المصغرة -->
   <div class="thumbnails">
     <img src="img1.jpg" onclick="changeImage(this)">
     <img src="img2.jpg" onclick="changeImage(this)">
     <img src="img3.jpg" onclick="changeImage(this)">
     <img src="img4.jpg" onclick="changeImage(this)">
     <img src="img5.jpg" onclick="changeImage(this)">
+    <img src="img6.jpg" onclick="changeImage(this)">
+    <img src="img7.jpg" onclick="changeImage(this)">
+    <img src="img8.jpg" onclick="changeImage(this)">
+    <img src="img9.jpg" onclick="changeImage(this)">
+    <img src="img10.jpg" onclick="changeImage(this)">
   </div>
-
 </div>
 
-<!-- الفورم -->
-<div class="viewer" id="viewer">
-  <img id="viewerImg">
+<!-- وضع ملء الشاشة -->
+<div class="fullscreen-mode" id="fullscreenView">
+  <button class="close-btn" onclick="toggleFullscreen()">✕</button>
+  <img class="fullscreen-img" id="fullscreenImg" src="" alt="صورة مكبرة">
 </div>
 
 <script>
+// عناصر DOM
 const mainImage = document.getElementById('mainImage');
-const viewer = document.getElementById('viewer');
-const viewerImg = document.getElementById('viewerImg');
+const fullscreenView = document.getElementById('fullscreenView');
+const fullscreenImg = document.getElementById('fullscreenImg');
+const album = document.querySelector('.album');
 
+// تغيير الصورة الرئيسية
 function changeImage(img) {
-  mainImage.src = img.src;
+  const newSrc = img.src;
+  mainImage.src = newSrc;
+  fullscreenImg.src = newSrc;
 }
 
-/* فتح الفورم عند الضغط (الهاتف فقط) */
-mainImage.addEventListener('click', () => {
+// التبديل بين وضع الشاشة الكاملة والعادي
+function toggleFullscreen() {
+  // التحقق مما إذا كنا على هاتف
   if (window.innerWidth <= 768) {
-    viewerImg.src = mainImage.src;
-    viewer.style.display = 'block';
+    if (fullscreenView.classList.contains('active')) {
+      // العودة إلى العرض العادي
+      fullscreenView.classList.remove('active');
+      album.style.opacity = '1';
+      album.style.pointerEvents = 'auto';
+    } else {
+      // الانتقال إلى وضع الشاشة الكاملة
+      fullscreenImg.src = mainImage.src;
+      fullscreenView.classList.add('active');
+      album.style.opacity = '0.3';
+      album.style.pointerEvents = 'none';
+    }
+  }
+}
+
+// إغلاق وضع الشاشة الكاملة عند النقر خارج الصورة
+fullscreenView.addEventListener('click', function(e) {
+  if (e.target === fullscreenView) {
+    toggleFullscreen();
   }
 });
 
-/* إغلاق الفورم عند الضغط خارج الصورة */
-viewer.addEventListener('click', () => {
-  viewer.style.display = 'none';
+// إغلاق وضع الشاشة الكاملة بمفتاح ESC
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && fullscreenView.classList.contains('active')) {
+    toggleFullscreen();
+  }
 });
+
+// تعيين الصورة الأولى كافتراضية
+window.onload = function() {
+  fullscreenImg.src = mainImage.src;
+};
 </script>
 
 </body>
