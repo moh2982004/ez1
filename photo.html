@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معرض الصور</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Tahoma, Arial;
+  background:#f3f3f3;
+}
+
+/* شبكة الصور */
+.gallery{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:15px;
+  padding:15px;
+  max-width:1200px;
+  margin:auto;
+}
+
+.gallery img{
+  width:100%;
+  height:200px;
+  object-fit:cover;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.3s;
+}
+.gallery img:hover{
+  transform:scale(1.05);
+}
+
+/* الفورم (Modal) */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.9);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.modal.active{
+  display:flex;
+}
+
+/* الصورة داخل الفورم */
+.modal img{
+  max-width:90%;
+  max-height:90%;
+  object-fit:contain;
+  cursor:grab;
+  transition:transform .2s;
+}
+
+/* زر الإغلاق */
+.close{
+  position:absolute;
+  top:20px;
+  right:20px;
+  font-size:32px;
+  color:#fff;
+  cursor:pointer;
+}
+
+/* الأسهم */
+.arrow{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:50px;
+  color:#fff;
+  cursor:pointer;
+  user-select:none;
+  padding:10px;
+}
+
+.arrow.left{left:10px;}
+.arrow.right{right:10px;}
+</style>
+</head>
+
+<body>
+
+<div class="gallery">
+  <img src="img1.jpg">
+  <img src="img2.jpg">
+  <img src="img3.jpg">
+  <img src="img4.jpg">
+  <img src="img5.jpg">
+  <img src="img6.jpg">
+  <img src="img7.jpg">
+  <img src="img8.jpg">
+  <img src="img9.jpeg">
+  <img src="img10.jpeg">
+  <img src="img11.jpeg">
+  <img src="img12.jpeg">
+  <img src="img13.jpeg">
+  <img src="img14.jpeg">
+</div>
+
+<!-- الفورم -->
+<div class="modal" id="modal">
+  <span class="close" onclick="closeModal()">✕</span>
+  <span class="arrow left" onclick="prevImage()">❮</span>
+  <img id="modalImg">
+  <span class="arrow right" onclick="nextImage()">❯</span>
+</div>
+
+<script>
+const images = document.querySelectorAll('.gallery img');
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modalImg');
+
+let currentIndex = 0;
+let scale = 1;
+
+// فتح الفورم
+images.forEach((img, index) => {
+  img.onclick = () => {
+    currentIndex = index;
+    openModal();
+  }
+});
+
+function openModal(){
+  modal.classList.add('active');
+  modalImg.src = images[currentIndex].src;
+  scale = 1;
+  modalImg.style.transform = 'scale(1)';
+}
+
+// إغلاق
+function closeModal(){
+  modal.classList.remove('active');
+}
+
+// التالي
+function nextImage(){
+  currentIndex = (currentIndex + 1) % images.length;
+  openModal();
+}
+
+// السابق
+function prevImage(){
+  currentIndex = (currentIndex - 1 + images.length) % images.length;
+  openModal();
+}
+
+/* Zoom بالماوس */
+modalImg.addEventListener('wheel', e => {
+  e.preventDefault();
+  scale += e.deltaY * -0.001;
+  scale = Math.min(Math.max(1, scale), 4);
+  modalImg.style.transform = `scale(${scale})`;
+});
+
+/* إغلاق عند الضغط خارج الصورة */
+modal.addEventListener('click', e => {
+  if(e.target === modal) closeModal();
+});
+
+/* ESC */
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closeModal();
+});
+</script>
+
+</body>
+</html>
